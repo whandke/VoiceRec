@@ -1,3 +1,4 @@
 /voice
 /voice/*
 *.wav
+.vscode/
