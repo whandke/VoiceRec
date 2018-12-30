@@ -5,9 +5,11 @@ import scipy.io.wavfile as wavfile
 import scipy.signal as signal
 import matplotlib
 import matplotlib.pyplot as plt
+import warnings
 plt.style.use(['dark_background', 'ggplot'])
 
 subs = 6
+debug = False
 
 
 def hps(data, rate, iter):
@@ -23,24 +25,24 @@ def hps(data, rate, iter):
     l = len(ds5)
 
     new = processed[:l] * ds2[:l] * ds3[:l] * ds4[:l] * ds5[:l]
+    if debug:
+        plt.subplot(subs, 1, 1)
+        plt.plot(processed[:l])
 
-    plt.subplot(subs, 1, 1)
-    plt.plot(processed[:l])
+        plt.subplot(subs, 1, 2)
+        plt.plot(ds2[:l])
 
-    plt.subplot(subs, 1, 2)
-    plt.plot(ds2[:l])
+        plt.subplot(subs, 1, 3)
+        plt.plot(ds3[:l])
 
-    plt.subplot(subs, 1, 3)
-    plt.plot(ds3[:l])
+        plt.subplot(subs, 1, 4)
+        plt.plot(ds4[:l])
 
-    plt.subplot(subs, 1, 4)
-    plt.plot(ds4[:l])
+        plt.subplot(subs, 1, 5)
+        plt.plot(ds5[:l])
 
-    plt.subplot(subs, 1, 5)
-    plt.plot(ds5[:l])
-
-    plt.subplot(subs, 1, 6)
-    plt.plot(new[:l])
+        plt.subplot(subs, 1, 6)
+        plt.plot(new[:l])
 
     lcf = 50
 
@@ -52,21 +54,31 @@ def hps(data, rate, iter):
 if __name__ == '__main__':
 
     voice = sys.argv[1]
+    if len(sys.argv) == 3 and sys.argv[2] == '-d':
+        print("[INFO] Debug Mode")
+        debug = True
+    try:
+        warnings.filterwarnings('ignore')
+        rate, data = wavfile.read(voice)
+        data = data.astype(float) / 2**16
+        if not isinstance(data[0], float):
+            data = data[:, 0] + data[:, 1]
+        rate = float(rate)
 
-    rate, data = wavfile.read(voice)
-    data = data.astype(float) / 2**16
-    if not isinstance(data[0], float):
-        data = data[:, 0] + data[:, 1]
-    rate = float(rate)
+        l = len(data)
+        third = int(len(data) / 3)
 
-    time = len(data) / rate
+        data = data[third:l-third]
 
-    result = hps(data, rate, 4)
+        result = hps(data, rate, 4)
 
-    ans = 'M'
-    if result > 170:
-        ans = 'K'
+        ans = 'M'
+        if result > 170:
+            ans = 'K'
 
-    print(ans)
-
-    plt.show()
+        print(ans)
+        if debug:
+            print(str(result))
+            plt.show()
+    except:
+        print('M')
